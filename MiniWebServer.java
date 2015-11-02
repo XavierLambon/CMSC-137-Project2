@@ -25,7 +25,7 @@ public class MiniWebServer{
 
 				String output = "<!DOCTYPE html><html><body><table border='1' width='100%'>";
 				String line = reader.readLine();
-				String path = "backup/UDPClient.java";	//make this dynamnic
+				String path = "sample page_files/wow.txt";	//make this dynamnic
 				boolean first = true;
 
 				while(line!=null && !line.isEmpty()){
@@ -34,25 +34,38 @@ public class MiniWebServer{
 						output += 	"<tr><td>"+keyValue[0]+"</td><td>"+keyValue[1]+"</td></tr>";
 
 					}else{	//handles the initial request line
-						//path = "";
+						String [] reqLine = line.split(" ");
+						path = reqLine[1];
 						output += "<tr><td>Request line:</td><td>"+line+"</td><tr>";
 						first = false;
 					}
 					line = reader.readLine();
 				}
 
-				//checks if the file exists
-				File fileCheck = new File(path);
-				String fileContents = "";
-				if(fileCheck.exists() && !fileCheck.isDirectory()){
-					fileContents = readFile(path);	//appends the file content to the string response
+				String httpResponse = "";
+				if(path.length() > 1){
+					path = path.substring(1);
+					path = path.replaceAll("%20", " "); //reverts back the escape char for space to the normal space
+					
+					//checks if the file exists
+					File fileCheck = new File(path);
+					String fileContents = "";
+					if(fileCheck.exists() && !fileCheck.isDirectory()){
+						fileContents = readFile(path);	//appends the file content to the string response
+						output += "</table></body></html>";
+						httpResponse = "HTTP/1.1 200 OK\r\n\r\n" + output+fileContents;
+					}else{
+						fileContents = "File Not Found";
+						output += "</table></body></html>";
+						httpResponse = "HTTP/1.1 404 Not Found\r\n\r\n"+output+fileContents;
+					}
 				}else{
-					fileContents = "File Not Found";
+					output += "</table></body></html>";
+					httpResponse = "HTTP/1.1 200 OK\r\n\r\n"+output;
 				}
-				
-				output += "</table></body></html>";
 
-				String httpResponse = "HTTP/1.1 200 OK\r\n\r\n" + output+fileContents;
+				
+				
                 socket.getOutputStream().write(httpResponse.getBytes("UTF-8"));
 			}
 		}
@@ -69,7 +82,7 @@ public class MiniWebServer{
 			stringBuilder.append(ls);
 		}
 
-		return "<pre style ='word wrap; break-word; white-space; pre-wrap;'>"+stringBuilder.toString()+"</pre>";
+		return "<pre style ='word wrap: break-word; white-space: pre-wrap;'>"+stringBuilder.toString()+"</pre>";
 	}
 }
 
